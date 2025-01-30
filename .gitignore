@@ -1,0 +1,19 @@
+# Ignore build directories
+bin/
+obj/
+
+# Env files
+.env
+
+# Ignore JetBrains Rider or IntelliJ IDEA settings
+.idea/
+
+# Ignore Visual Studio settings
+.vscode/
+.vs/
+
+# Ignore other IDE-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
