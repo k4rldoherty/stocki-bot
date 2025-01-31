@@ -1,22 +1,33 @@
+using DiscordBot.Models;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Text.Json;
-using DiscordBot.Models;
 
 namespace DiscordBot.Services;
 
-public class ApiService(HttpClient httpClient)
+public class ApiService
 {
-    // TODO: Env variable
-    private const string ApiToken = "123.ie";
+    private readonly HttpClient _httpClient;
+    private readonly string apiKey;
+    public ApiService(HttpClient httpClient, IConfiguration config)
+    {
+        _httpClient = httpClient;
+        this.apiKey = config["ALPHA_VANTAGE_API_KEY"] ?? throw new NullReferenceException("API KEY NOT FOUND");
+
+    }
 
     public async Task<ApiResponse> GetSingleStockPriceDailyDataAsync(string ticker)
     {
         var url =
-            $"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={ApiToken}";
-        var response = await httpClient.GetAsync(url);
+            $"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={apiKey}";
+        var response = await _httpClient.GetAsync(url);
         if (response.StatusCode != HttpStatusCode.OK) return new ApiResponse($"{response.StatusCode}: Something went wrong when retrieving the data", null);
         var responseStr = await response.Content.ReadAsStringAsync();
         var jsonDoc = JsonDocument.Parse(responseStr);
+        if(!jsonDoc.RootElement.TryGetProperty("Meta Data", out var x)) 
+        {
+            return new ApiResponse("E1", null);
+        }
         return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
     }
 }

@@ -4,6 +4,7 @@ using Discord.Commands;
 namespace DiscordBot.Services;
 using Discord.WebSocket;
 
+// From Discord.net's Documentation 
 public class LoggingService
 {
     public LoggingService(DiscordSocketClient client, CommandService command)

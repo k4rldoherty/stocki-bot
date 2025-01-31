@@ -1,18 +1,20 @@
-﻿using Discord.WebSocket;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
-using Microsoft.Extensions.DependencyInjection;
+using Discord.WebSocket;
 using DiscordBot.Services;
 using DiscordBot.Services.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot;
 
-public static class Program
+public class Program
 {
-    private static ServiceProvider ConfigureServices()
+    private static ServiceProvider ConfigureServices(IConfigurationRoot config)
     {
         // Different way of doing it than i'm used to.
         var services = new ServiceCollection()
+            .AddSingleton<IConfiguration>(config)
             .AddSingleton<DiscordSocketClient>()
             .AddSingleton<CommandService>()
             .AddSingleton<LoggingService>()
@@ -20,63 +22,35 @@ public static class Program
             .AddSingleton<ApiService>()
             .AddSingleton<HttpClient>()
             .AddSingleton<BotResponsesService>()
+            .AddSingleton<MessageHandlerService>()
             .BuildServiceProvider();
 
         return services;
     }
 
-    private static async Task MessageHandler(SocketMessage msg)
+    public static async Task Main()
     {
-        // Stops the bot from replying to itself
-        if (msg.Author.IsBot) return;
-        // TODO: some text functionality can be implemented here .. openAI API or something.
-        // Reply to all dm messages or any time it is mentioned.
-        if (msg.Channel.ChannelType == ChannelType.DM || msg.MentionedUsers.Any(x => x.IsBot))
-        {
-            await msg.Channel.SendMessageAsync(
-                $"Hello {msg.Author.Username}!\nI am currently a work in progress and don't have the brain power to converse with you.\nCheck back soon...");
-        }
-    }
+        var config = new ConfigurationBuilder()
+            .AddUserSecrets<Program>()
+            .Build();
 
-    private static async Task InitializeCommandsAsync(DiscordSocketClient client)
-    {
-        var globalCommands = await client.GetGlobalApplicationCommandsAsync();
-
-        // TODO: Refactor this as file will get large with many commands
-        if (!globalCommands.Any(x => x.Name.Equals("stock-price")))
-        {
-            var userCommand = new SlashCommandBuilder()
-                .WithName("stock-price")
-                .WithDescription("Gets the price of a stock by passing in a ticker eg 'PLTR' after the command")
-                .AddOption("ticker", ApplicationCommandOptionType.String, "The symbol to get the price of a stock",
-                    true)
-                .Build();
-
-            await client.CreateGlobalApplicationCommandAsync(userCommand);
-        }
-
-        // More commands here ...
-    }
-
-    public static async Task Main(string[] args)
-    {
         // Configure services used in bot
-        var services = ConfigureServices();
+        var services = ConfigureServices(config);
         var client = services.GetRequiredService<DiscordSocketClient>();
         var slashCommands = services.GetRequiredService<SlashCommandsService>();
+        var messageHandler = services.GetRequiredService<MessageHandlerService>();
         services.GetRequiredService<LoggingService>();
-        // TODO: Change to env variable
-        var token = "123.ie";
+        var token = config["DISCORD_TOKEN"];
 
         // Login and start the bot
         await client.LoginAsync(TokenType.Bot, token);
         await client.StartAsync();
 
         // Handle Messages
-        client.MessageReceived += MessageHandler;
+        client.MessageReceived += messageHandler.HandleMessageAsync;
 
         // Initialize commands
-        client.Ready += async () => await InitializeCommandsAsync(client);
+        client.Ready += async () => await slashCommands.InitializeCommandsAsync(client);
 
         // Slash command executed
         client.SlashCommandExecuted += async (command) =>
@@ -84,13 +58,21 @@ public static class Program
             switch (command.CommandName)
             {
                 case "stock-price":
-                    var ticker = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
-                    if (ticker != null)
+                    var stockPriceArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                    if (stockPriceArg is not null)
                     {
-                        var response = await slashCommands.HandleGetPriceAsync(ticker);
+                        var response = await slashCommands.HandleGetPriceAsync(stockPriceArg);
                         await command.RespondAsync(response);
                     }
 
+                    break;
+
+                case "info":
+                    var infoArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                    if (infoArg is not null)
+                    {
+                        
+                    }
                     break;
             }
         };

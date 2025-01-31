@@ -5,10 +5,13 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <UserSecretsId>01cf4af6-ae6e-4395-9eb0-918974d2e5b0</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Discord.Net" Version="3.17.1" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.1" />
     </ItemGroup>
 
