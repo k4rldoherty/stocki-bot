@@ -1,7 +1,7 @@
 using Discord;
 using Discord.Commands;
 
-namespace DiscordBot;
+namespace DiscordBot.Services;
 using Discord.WebSocket;
 
 public class LoggingService

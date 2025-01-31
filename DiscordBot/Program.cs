@@ -1,8 +1,9 @@
 ﻿using Discord.WebSocket;
 using Discord;
 using Discord.Commands;
-using DiscordBot.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using DiscordBot.Services;
+using DiscordBot.Services.Utils;
 
 namespace DiscordBot;
 
