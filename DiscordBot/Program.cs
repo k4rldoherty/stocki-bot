@@ -71,7 +71,8 @@ public class Program
                     var infoArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
                     if (infoArg is not null)
                     {
-                        
+                        var response = await slashCommands.HandleGetInfoAsync(infoArg);
+                        await command.RespondAsync(response);
                     }
                     break;
             }

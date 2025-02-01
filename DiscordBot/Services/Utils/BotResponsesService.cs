@@ -1,3 +1,5 @@
+using DiscordBot.Models;
+
 namespace DiscordBot.Services.Utils;
 
 public class BotResponsesService
@@ -20,10 +22,33 @@ public class BotResponsesService
     {
         return $"""
             # Error
-            - I can't seem to find a stock by the name **{ticker}**
+            - I am having trouble retrieving the relevant data for **{ticker}**
             - Check it was the correct ticker and try again, and if you think I am wrong you can contact my developer
-            *This bot currently only works on US based stocks.*
+            
+            *This bot currently only works on US based stocks, and the API can change without letting developers know so if you see any problems please report them!*
+            
+            Thanks,
+            Stocki :)
+            
             ``` {message} ```
+            """;
+    }
+
+    public string FormatStockSummary(StockSummary stockSummary)
+    {
+        return $"""
+            # {stockSummary.Name}
+            ## Basic Info
+            - Sector: **{stockSummary.Sector}**
+            - Symbol: **{stockSummary.Symbol}**
+            ## Description
+            {stockSummary.Description}
+            ## Financials
+            ### Current Price: ${stockSummary.Price:#.##}
+            - Earnings Per Share: **{stockSummary.Eps}**
+            - Analyst Price Target (12 Month Horizon): **${stockSummary.AnalystPriceTarget}**
+
+            *This feature will be continuously updated with more metrics, I'm just trying to get a working version out ASAP*
             """;
     }
 }
