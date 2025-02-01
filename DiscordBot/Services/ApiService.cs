@@ -24,7 +24,8 @@ public class ApiService
         if (response.StatusCode != HttpStatusCode.OK) return new ApiResponse($"{response.StatusCode}: Something went wrong when retrieving the data", null);
         var responseStr = await response.Content.ReadAsStringAsync();
         var jsonDoc = JsonDocument.Parse(responseStr);
-        if(!jsonDoc.RootElement.TryGetProperty("Meta Data", out var x)) 
+        if (jsonDoc.RootElement.TryGetProperty("Information", out var x)) return new ApiResponse("My owner is too cheap to pay for the premium API.. I'm going to sleep until tomorrow.", null);
+        if (!jsonDoc.RootElement.TryGetProperty("Meta Data", out var y)) 
         {
             return new ApiResponse("API-E1", null);
         }
@@ -39,7 +40,8 @@ public class ApiService
         if (response.StatusCode != HttpStatusCode.OK) return new ApiResponse($"{response.StatusCode}: Something went wrong when retrieving the data", null);
         var responseStr = await response.Content.ReadAsStringAsync();
         var jsonDoc = JsonDocument.Parse(responseStr);
-        if(!jsonDoc.RootElement.TryGetProperty("Symbol", out var x))
+        if (jsonDoc.RootElement.TryGetProperty("Information", out var x)) return new ApiResponse("My owner is too cheap to pay for the premium API.. I'm going to sleep until tomorrow.", null);
+        if(!jsonDoc.RootElement.TryGetProperty("Symbol", out var y))
         {
             return new ApiResponse("API-E2", null);
         }

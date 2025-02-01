@@ -21,16 +21,17 @@ public class BotResponsesService
     public string ErrorResponse(string ticker, string message)
     {
         return $"""
-            # Error
-            - I am having trouble retrieving the relevant data for **{ticker}**
+            # Error Processing Request
+            - I am having trouble carrying out this request
             - Check it was the correct ticker and try again, and if you think I am wrong you can contact my developer
+            - Additionally, check the error message below as it may be helpful.
             
             *This bot currently only works on US based stocks, and the API can change without letting developers know so if you see any problems please report them!*
             
+            ``` {message} ```
+
             Thanks,
             Stocki :)
-            
-            ``` {message} ```
             """;
     }
 
