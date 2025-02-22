@@ -1,13 +1,12 @@
 using Discord.WebSocket;
 using Discord;
-using DiscordBot.Services.Utils;
 using DiscordBot.Models;
 
 namespace DiscordBot.Services;
 
-public class SlashCommandsService(ApiService apiService, BotResponsesService botResponsesService)
+public class SlashCommandsService(ApiService apiService)
 {
-    public async Task InitializeCommandsAsync(DiscordSocketClient client)
+    public static async Task InitializeCommandsAsync(DiscordSocketClient client)
     {
         var globalCommands = await client.GetGlobalApplicationCommandsAsync();
 
@@ -42,7 +41,7 @@ public class SlashCommandsService(ApiService apiService, BotResponsesService bot
     {
         ticker = ticker.ToUpper();
         var response = await apiService.GetSingleStockPriceDailyDataAsync(ticker);
-        if (response.Data is null) return botResponsesService.ErrorResponse(ticker, response.Message);
+        if (response.Data is null) return BotResponsesService.ErrorResponse(response.Message);
         var data = response.Data[0];
         var dailyTimeSeries = data.RootElement
             .GetProperty("Time Series (Daily)")
@@ -56,7 +55,7 @@ public class SlashCommandsService(ApiService apiService, BotResponsesService bot
     {
         ticker = ticker.ToUpper();
         var response = await apiService.GetSingleStockPriceDailyDataAsync(ticker);
-        if (response.Data is null) return botResponsesService.ErrorResponse(ticker, response.Message);
+        if (response.Data is null) return BotResponsesService.ErrorResponse(response.Message);
         var data = response.Data[0];
         var dailyTimeSeries = data.RootElement
             .GetProperty("Time Series (Daily)")
@@ -64,24 +63,24 @@ public class SlashCommandsService(ApiService apiService, BotResponsesService bot
         dailyTimeSeries.MoveNext();
         if (!decimal.TryParse(dailyTimeSeries.Current.Value.GetProperty("4. close").GetString(), out var priceCurrent))
             return response.Message;
-        if (!dailyTimeSeries.MoveNext()) botResponsesService.ErrorResponse(ticker, response.Message);
+        if (!dailyTimeSeries.MoveNext()) BotResponsesService.ErrorResponse(response.Message);
         return !decimal.TryParse(dailyTimeSeries.Current.Value.GetProperty("4. close").GetString(), out var priceNext)
-            ? botResponsesService.ErrorResponse(ticker, response.Message)
-            : botResponsesService.FormatSingleStockDaily(ticker, priceCurrent, priceNext);
+            ? BotResponsesService.ErrorResponse(response.Message)
+            : BotResponsesService.FormatSingleStockDaily(ticker, priceCurrent, priceNext);
     }
 
     public async Task<string> HandleGetInfoAsync(string ticker)
     {
         ticker = ticker.ToUpper();
         var response = await apiService.GetStockInfoAsync(ticker);
-        if (response.Data is null) return botResponsesService.ErrorResponse(ticker, response.Message);
+        if (response.Data is null) return BotResponsesService.ErrorResponse(response.Message);
         var data = response.Data[0].RootElement;
-        if (!data.TryGetProperty("Symbol", out var symbol)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse symbol");
-        if (!data.TryGetProperty("Name", out var name)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse name");
-        if (!data.TryGetProperty("Description", out var desc)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse description");
-        if (!data.TryGetProperty("Sector", out var sector)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse sector");
-        if (!data.TryGetProperty("EPS", out var eps)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse symbol");
-        if (!data.TryGetProperty("AnalystTargetPrice", out var analystPriceTarget)) return botResponsesService.ErrorResponse(ticker, "[HandleGetInfoAsync]: Unable to parse analyst price targets");
+        if (!data.TryGetProperty("Symbol", out var symbol)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse symbol");
+        if (!data.TryGetProperty("Name", out var name)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse name");
+        if (!data.TryGetProperty("Description", out var desc)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse description");
+        if (!data.TryGetProperty("Sector", out var sector)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse sector");
+        if (!data.TryGetProperty("EPS", out var eps)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse symbol");
+        if (!data.TryGetProperty("AnalystTargetPrice", out var analystPriceTarget)) return BotResponsesService.ErrorResponse("[HandleGetInfoAsync]: Unable to parse analyst price targets");
         var stockDetails = new StockSummary(
             symbol.ToString(),
             name.ToString(),
@@ -92,6 +91,27 @@ public class SlashCommandsService(ApiService apiService, BotResponsesService bot
             Decimal.Parse(analystPriceTarget.ToString())
             );
 
-        return botResponsesService.FormatStockSummary(stockDetails);
+        return BotResponsesService.FormatStockSummary(stockDetails);
+    }
+
+    public async Task<string> HandleGetCompanyNewsAsync(string ticker)
+    {
+        ticker = ticker.ToUpper();
+        var response = await apiService.GetCompanyNewsAsync(ticker);
+        if (response.Data is null) return BotResponsesService.ErrorResponse(response.Message);
+        var data = response.Data[0].RootElement.EnumerateArray().Take(3).ToList();
+        var articles = new List<CompanyNewsArticle>();
+        foreach (var item in data)
+        {
+            if (!item.TryGetProperty("datetime", out var datetime)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse datetime");
+            if (!item.TryGetProperty("headline", out var headline)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse headline");
+            if (!item.TryGetProperty("source", out var source)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse source");
+            if (!item.TryGetProperty("summary", out var summary)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse summary");
+            if (!item.TryGetProperty("url", out var url)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse url");
+            if (!item.TryGetProperty("related", out var related)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse related");
+            if (!item.TryGetProperty("image", out var image)) return BotResponsesService.ErrorResponse("[HandleGetCompanyNewsAsync]: Unable to parse image");
+            articles.Add(new CompanyNewsArticle(Double.Parse(datetime.ToString()), headline.ToString(), source.ToString(), summary.ToString(), url.ToString(), related.ToString(), image.ToString()));
+        }
+        return BotResponsesService.FormatCompanyNews(articles);
     }
 }

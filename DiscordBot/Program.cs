@@ -2,7 +2,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Services;
-using DiscordBot.Services.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -50,7 +49,7 @@ public class Program
         client.MessageReceived += messageHandler.HandleMessageAsync;
 
         // Initialize commands
-        client.Ready += async () => await slashCommands.InitializeCommandsAsync(client);
+        client.Ready += async () => await SlashCommandsService.InitializeCommandsAsync(client);
 
         // Slash command executed
         client.SlashCommandExecuted += async (command) =>
@@ -64,7 +63,6 @@ public class Program
                         var response = await slashCommands.HandleGetPriceAsync(stockPriceArg);
                         await command.RespondAsync(response);
                     }
-
                     break;
 
                 case "info":
@@ -74,6 +72,18 @@ public class Program
                         var response = await slashCommands.HandleGetInfoAsync(infoArg);
                         await command.RespondAsync(response);
                     }
+                    break;
+
+                case "latest-news":
+                    var companyNewsArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                    if(companyNewsArg is not null)
+                    {
+                        var response = await slashCommands.HandleGetCompanyNewsAsync(companyNewsArg);
+                        await command.RespondAsync(response);
+                    }
+                    break;
+
+                default:
                     break;
             }
         };

@@ -1,10 +1,11 @@
 using DiscordBot.Models;
+using System.Text;
 
-namespace DiscordBot.Services.Utils;
+namespace DiscordBot.Services;
 
 public class BotResponsesService
 {
-    public string FormatSingleStockDaily(string ticker, decimal curr, decimal prev)
+    public static string FormatSingleStockDaily(string ticker, decimal curr, decimal prev)
     {
         var diff = (curr - prev) / curr * 100;
         return $"""
@@ -18,7 +19,7 @@ public class BotResponsesService
 
     }
 
-    public string ErrorResponse(string ticker, string message)
+    public static string ErrorResponse(string message)
     {
         return $"""
             # Error Processing Request
@@ -35,7 +36,7 @@ public class BotResponsesService
             """;
     }
 
-    public string FormatStockSummary(StockSummary stockSummary)
+    public static string FormatStockSummary(StockSummary stockSummary)
     {
         return $"""
             # {stockSummary.Name}
@@ -51,5 +52,25 @@ public class BotResponsesService
 
             *This feature will be continuously updated with more metrics, I'm just trying to get a working version out ASAP*
             """;
+    }
+
+    public static string FormatCompanyNews(List<CompanyNewsArticle> companyNewsArticles)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"# Top 3 news stories for {companyNewsArticles[0].Related}");
+        foreach(var a in companyNewsArticles)
+        {
+            sb.Append($"""
+                ## {a.Headline}
+                > {a.DateOfArticle}
+                > **Source**: {a.Source}
+                {a.Summary}
+                [Full article]({a.Url})
+                """);
+            sb.AppendLine();
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
     }
 }
