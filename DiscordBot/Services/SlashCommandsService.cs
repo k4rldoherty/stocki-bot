@@ -1,6 +1,6 @@
 using Discord.WebSocket;
 using Discord;
-using DiscordBot.Models;
+using DiscordBot.Core;
 
 namespace DiscordBot.Services;
 

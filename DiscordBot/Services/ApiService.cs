@@ -1,4 +1,4 @@
-using DiscordBot.Models;
+using DiscordBot.Core;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Text.Json;

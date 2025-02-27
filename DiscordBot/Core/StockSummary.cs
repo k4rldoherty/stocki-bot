@@ -4,30 +4,30 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DiscordBot.Models
-{
-    public class StockSummary
-    {
-        public string Symbol;
-        public string Name;
-        public string Description;
-        public string Sector;
-        public decimal Price;
-        public decimal Eps;
-        public decimal AnalystPriceTarget;
+namespace DiscordBot.Core;
 
-        public StockSummary(string symbol, string name, string description, string sector, decimal price, decimal eps, decimal priceTarget) 
-        {
-            Symbol = symbol;
-            Name = name;
-            Description = description;
-            Sector = sector;
-            Price = price;
-            Eps = eps;
-            AnalystPriceTarget = priceTarget;
-        }
-    }
+public class StockSummary
+{
+  public string Symbol;
+  public string Name;
+  public string Description;
+  public string Sector;
+  public decimal Price;
+  public decimal Eps;
+  public decimal AnalystPriceTarget;
+
+  public StockSummary(string symbol, string name, string description, string sector, decimal price, decimal eps, decimal priceTarget) 
+  {
+    Symbol = symbol;
+    Name = name;
+    Description = description;
+    Sector = sector;
+    Price = price;
+    Eps = eps;
+    AnalystPriceTarget = priceTarget;
+  }
 }
+
 
 
 //{

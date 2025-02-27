@@ -1,4 +1,4 @@
-using DiscordBot.Models;
+using DiscordBot.Core;
 using System.Text;
 
 namespace DiscordBot.Services;

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace DiscordBot.Models;
+namespace DiscordBot.Core;
 
 public class ApiResponse
 {
