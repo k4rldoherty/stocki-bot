@@ -17,3 +17,6 @@ obj/
 *.userosscache
 *.suo
 *.sln.docstates
+
+# Ignore my personal todo file 
+TODO.md
