@@ -17,7 +17,8 @@ public class BotService
         SlashCommandHandler slashCommandHandler,
         MessageHandlerService messageHandler,
         IConfiguration config,
-        LoggingService loggingService)
+        LoggingService loggingService
+    )
     {
         _client = client;
         _slashCommandHandler = slashCommandHandler;
@@ -44,4 +45,3 @@ public class BotService
         _client.SlashCommandExecuted += _slashCommandHandler.HandleCommandAsync;
     }
 }
-
