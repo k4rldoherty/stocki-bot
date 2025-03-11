@@ -45,7 +45,49 @@ public class SlashCommandsService(ApiService apiService)
 
             await client.CreateGlobalApplicationCommandAsync(infoCommand);
         }
+        else if (!globalCommands.Any(x => x.Name == "subscribe"))
+        {
+            var subscribeCommand = new SlashCommandBuilder()
+                .WithName("subscribe")
+                .WithDescription(
+                    "Subscribes the user to price changes and latest news in a stock, either by email, message or both."
+                )
+                .AddOption(
+                    "ticker",
+                    ApplicationCommandOptionType.String,
+                    "The ticker symbol of the stock you want to subscribe to notifications about",
+                    true
+                )
+                .Build();
+            await client.CreateGlobalApplicationCommandAsync(subscribeCommand);
+        }
+        else if (!globalCommands.Any(x => x.Name == "unsubscribe"))
+        {
+            var unsubscribeCommand = new SlashCommandBuilder()
+                .WithName("unsubscribe")
+                .WithDescription(
+                    "Unsubscribes the user to price changes and latest news in a stock, either by email, message or both."
+                )
+                .AddOption(
+                    "ticker",
+                    ApplicationCommandOptionType.String,
+                    "The ticker symbol of the stock you want to unsubscribe to notifications about",
+                    true
+                )
+                .Build();
+            await client.CreateGlobalApplicationCommandAsync(unsubscribeCommand);
+        }
         // More commands here ...
+    }
+
+    public async Task HandleSubscribeAsync(string ticker)
+    {
+        await Task.CompletedTask;
+    }
+
+    public async Task HandleUnsubscribeAsync(string ticker)
+    {
+        await Task.CompletedTask;
     }
 
     public async Task<string> HandleGetPriceOnlyAsync(string ticker)
