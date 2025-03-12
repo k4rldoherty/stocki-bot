@@ -8,21 +8,21 @@ public class BotService
 {
     private readonly DiscordSocketClient _client;
     private readonly SlashCommandHandler _slashCommandHandler;
-    private readonly MessageHandlerService _messageHandler;
+    private readonly InputHandlerService _inputHandler;
     private readonly IConfiguration _config;
     private readonly LoggingService _loggingService;
 
     public BotService(
         DiscordSocketClient client,
         SlashCommandHandler slashCommandHandler,
-        MessageHandlerService messageHandler,
+        InputHandlerService inputHandler,
         IConfiguration config,
         LoggingService loggingService
     )
     {
         _client = client;
         _slashCommandHandler = slashCommandHandler;
-        _messageHandler = messageHandler;
+        _inputHandler = inputHandler;
         _config = config;
         _loggingService = loggingService;
     }
@@ -36,7 +36,10 @@ public class BotService
         await _client.StartAsync();
 
         // Handle Messages
-        _client.MessageReceived += _messageHandler.HandleMessageAsync;
+        _client.MessageReceived += _inputHandler.HandleMessageAsync;
+
+        // Handle Dropdown Menu - W.I.P
+        _client.SelectMenuExecuted += _inputHandler.HandleSelectMenuAsync;
 
         // Initialize commands
         _client.Ready += async () => await SlashCommandsService.InitializeCommandsAsync(_client);

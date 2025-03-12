@@ -5,10 +5,15 @@ namespace DiscordBot.Services;
 public class SlashCommandHandler
 {
     private readonly SlashCommandsService _slashCommands;
+    private readonly SubscriptionService _subscriptionService;
 
-    public SlashCommandHandler(SlashCommandsService slashCommands)
+    public SlashCommandHandler(
+        SlashCommandsService slashCommands,
+        SubscriptionService subscriptionService
+    )
     {
         _slashCommands = slashCommands;
+        _subscriptionService = subscriptionService;
     }
 
     public async Task HandleCommandAsync(SocketSlashCommand command)
@@ -16,7 +21,9 @@ public class SlashCommandHandler
         switch (command.CommandName)
         {
             case "stock-price":
-                var stockPriceArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                var stockPriceArg = command
+                    .Data.Options.First(x => x.Name.Equals("ticker"))
+                    .Value.ToString();
                 if (stockPriceArg is not null)
                 {
                     var response = await _slashCommands.HandleGetPriceAsync(stockPriceArg);
@@ -25,7 +32,9 @@ public class SlashCommandHandler
                 break;
 
             case "info":
-                var infoArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                var infoArg = command
+                    .Data.Options.First(x => x.Name.Equals("ticker"))
+                    .Value.ToString();
                 if (infoArg is not null)
                 {
                     var response = await _slashCommands.HandleGetInfoAsync(infoArg);
@@ -34,11 +43,27 @@ public class SlashCommandHandler
                 break;
 
             case "latest-news":
-                var companyNewsArg = command.Data.Options.First(x => x.Name.Equals("ticker")).Value.ToString();
+                var companyNewsArg = command
+                    .Data.Options.First(x => x.Name.Equals("ticker"))
+                    .Value.ToString();
                 if (companyNewsArg is not null)
                 {
                     var response = await _slashCommands.HandleGetCompanyNewsAsync(companyNewsArg);
                     await command.RespondAsync(response);
+                }
+                break;
+
+            case "subscribe":
+                var subscriptionArg = command
+                    .Data.Options.First(x => x.Name.Equals("ticker"))
+                    .Value.ToString();
+                if (subscriptionArg is not null)
+                {
+                    var selectMenu = _subscriptionService.SpawnNotificationSelectMenu();
+                    await command.RespondAsync(
+                        "What type of commands would you like to recieve",
+                        components: selectMenu
+                    );
                 }
                 break;
 
@@ -48,4 +73,3 @@ public class SlashCommandHandler
         }
     }
 }
-

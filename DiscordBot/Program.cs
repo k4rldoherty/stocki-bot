@@ -33,10 +33,11 @@ public class Program
                     services.AddSingleton<SlashCommandsService>();
                     services.AddSingleton<LoggingService>();
                     services.AddSingleton<BotResponsesService>();
-                    services.AddSingleton<MessageHandlerService>();
+                    services.AddSingleton<InputHandlerService>();
                     services.AddSingleton<BotService>();
                     services.AddSingleton<SlashCommandHandler>();
                     services.AddTransient<ApiService>();
+                    services.AddSingleton<SubscriptionService>();
 
                     var connString = config["POSTGRES-CONNECTION-STRING"];
 
