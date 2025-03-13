@@ -1,4 +1,5 @@
 using Discord.WebSocket;
+using DiscordBot.Core;
 
 namespace DiscordBot.Services;
 
@@ -63,11 +64,9 @@ public class SlashCommandHandler
                         subscriptionArg,
                         command.User.Id
                     );
-                    if (!subscriptionStarted)
+                    if (!subscriptionStarted.Status)
                     {
-                        await command.RespondAsync(
-                            "Something went wrong starting the subscription process. Please check your ticker symbol and try again."
-                        );
+                        await command.RespondAsync(subscriptionStarted.Message);
                         return;
                     }
                     var selectMenu = _subscriptionService.SpawnNotificationSelectMenu();

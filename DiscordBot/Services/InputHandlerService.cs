@@ -41,10 +41,15 @@ namespace DiscordBot.Services
                 if (selectedValue is not null && int.TryParse(selectedValue, out var val))
                 {
                     var choice = (NotificationType)val;
-                    if (_subscriptionService.subscriptionsInProgress[arg.User.Id] is null)
+                    if (
+                        !_subscriptionService.subscriptionsInProgress.TryGetValue(
+                            arg.User.Id,
+                            out var _
+                        )
+                    )
                     {
-                        await arg.RespondAsync(
-                            "Something went wrong processing your notification choice. Please try again"
+                        await arg.Channel.SendMessageAsync(
+                            "This is most likely a repeated request. Ignoring"
                         );
                         return;
                     }
@@ -54,22 +59,7 @@ namespace DiscordBot.Services
                     var subscriptionAdded = await _subscriptionService.AddSubscriptionAsync(
                         arg.User.Id
                     );
-                    if (!subscriptionAdded)
-                    {
-                        await arg.RespondAsync(
-                            "Something went wrong adding your subscription to our db. Please try again (You may aleady have subscribed to this stock)."
-                        );
-                        return;
-                    }
-                    await arg.FollowupAsync(
-                        $"""
-                        Welcome to Stocki Notifications!
-                        You choose to sign up for {choice.ToString().ToLower()} notifications for {_subscriptionService.subscriptionsInProgress[
-                            arg.User.Id
-                        ].Ticker}.
-                        Processing your request and getting things ready...
-                        """
-                    );
+                    await arg.Channel.SendMessageAsync(subscriptionAdded.Message);
                 }
             }
         }

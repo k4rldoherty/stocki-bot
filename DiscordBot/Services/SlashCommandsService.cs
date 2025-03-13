@@ -81,10 +81,13 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
         // More commands here ...
     }
 
-    public async Task<bool> HandleSubscribeAsync(string ticker, ulong userId)
+    public async Task<OperationResponse> HandleSubscribeAsync(string ticker, ulong userId)
     {
         if (!await subscriptionService.CheckValidTickerAsync(ticker))
-            return false;
+            return new OperationResponse(
+                false,
+                "This ticker is not supported by our system. Please check the ticker and try again."
+            );
         var subcription = new StockNotificationSubscription
         {
             DiscordUID = userId,
@@ -94,7 +97,7 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
             IsActive = false,
         };
         subscriptionService.subscriptionsInProgress.Add(userId, subcription);
-        return true;
+        return new OperationResponse(true, "Subscription process started");
     }
 
     public async Task HandleUnsubscribeAsync(string ticker)

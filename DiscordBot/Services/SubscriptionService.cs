@@ -1,4 +1,5 @@
 using Discord;
+using DiscordBot.Core;
 using DiscordBot.Data;
 using DiscordBot.Data.Models;
 
@@ -22,7 +23,7 @@ public class SubscriptionService
     {
         ticker = ticker.ToUpper();
         var response = await _apiService.GetSingleStockPriceDailyDataAsync(ticker);
-        if (response.Data[0] is null)
+        if (response?.Data is null)
             return false;
         return true;
     }
@@ -53,10 +54,13 @@ public class SubscriptionService
         return builder.Build();
     }
 
-    public async Task<bool> AddSubscriptionAsync(ulong userId)
+    public async Task<OperationResponse> AddSubscriptionAsync(ulong userId)
     {
-        if (subscriptionsInProgress[userId] is null)
-            return false;
+        if (!subscriptionsInProgress.TryGetValue(userId, out var _))
+            return new OperationResponse(
+                false,
+                "Cannot find subscription data. Please restart your subscription"
+            );
 
         // TODO: More validation etc to be done here.
         if (
@@ -66,10 +70,19 @@ public class SubscriptionService
             )
             is not null
         )
-            return false;
+            return new OperationResponse(
+                false,
+                $"You have already subscribed to notifications for {subscriptionsInProgress[userId].Ticker}."
+            );
         var sub = subscriptionsInProgress[userId];
         subscriptionsInProgress.Remove(userId);
-        return await _subscriptionRepository.AddSubscriptionAsync(sub);
+        var added = await _subscriptionRepository.AddSubscriptionAsync(sub);
+        if (!added)
+            return new OperationResponse(
+                false,
+                "Something went wrong adding subscription to our database, please try again."
+            );
+        return new OperationResponse(true, "Subscription has been added successfully.");
     }
 
     // If the user wants email, provide the user with a text box that they can enter their email.

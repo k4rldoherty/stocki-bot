@@ -9,7 +9,7 @@ public class SubscriptionRepository(StockiContext stockiContext)
         subscription.CreatedAt = subscription.CreatedAt.ToUniversalTime();
         await stockiContext.StockNotificationSubscriptions.AddAsync(subscription);
         var result = await stockiContext.SaveChangesAsync();
-        if (result > 1)
+        if (result > 0)
             return true;
         return false;
     }
