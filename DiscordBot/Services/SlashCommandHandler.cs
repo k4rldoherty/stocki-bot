@@ -59,6 +59,17 @@ public class SlashCommandHandler
                     .Value.ToString();
                 if (subscriptionArg is not null)
                 {
+                    var subscriptionStarted = await _slashCommands.HandleSubscribeAsync(
+                        subscriptionArg,
+                        command.User.Id
+                    );
+                    if (!subscriptionStarted)
+                    {
+                        await command.RespondAsync(
+                            "Something went wrong starting the subscription process. Please check your ticker symbol and try again."
+                        );
+                        return;
+                    }
                     var selectMenu = _subscriptionService.SpawnNotificationSelectMenu();
                     await command.RespondAsync(
                         "What type of commands would you like to recieve",

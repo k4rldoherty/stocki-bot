@@ -41,11 +41,33 @@ namespace DiscordBot.Services
                 if (selectedValue is not null && int.TryParse(selectedValue, out var val))
                 {
                     var choice = (NotificationType)val;
+                    if (_subscriptionService.subscriptionsInProgress[arg.User.Id] is null)
+                    {
+                        await arg.RespondAsync(
+                            "Something went wrong processing your notification choice. Please try again"
+                        );
+                        return;
+                    }
+                    _subscriptionService.subscriptionsInProgress[arg.User.Id].NotificationType =
+                        choice;
+                    _subscriptionService.subscriptionsInProgress[arg.User.Id].IsActive = true;
+                    var subscriptionAdded = await _subscriptionService.AddSubscriptionAsync(
+                        arg.User.Id
+                    );
+                    if (!subscriptionAdded)
+                    {
+                        await arg.RespondAsync(
+                            "Something went wrong adding your subscription to our db. Please try again (You may aleady have subscribed to this stock)."
+                        );
+                        return;
+                    }
                     await arg.FollowupAsync(
                         $"""
-                        Welcome to being up to date!
-                        - You choose to sign up for {choice} notifications.
-                        - Processing your request.
+                        Welcome to Stocki Notifications!
+                        You choose to sign up for {choice.ToString().ToLower()} notifications for {_subscriptionService.subscriptionsInProgress[
+                            arg.User.Id
+                        ].Ticker}.
+                        Processing your request and getting things ready...
                         """
                     );
                 }

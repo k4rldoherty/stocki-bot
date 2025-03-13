@@ -39,6 +39,9 @@ public class Program
                     services.AddTransient<ApiService>();
                     services.AddSingleton<SubscriptionService>();
 
+                    // My Repositories
+                    services.AddSingleton<SubscriptionRepository>();
+
                     var connString = config["POSTGRES-CONNECTION-STRING"];
 
                     services.AddSingleton<HttpClient>();

@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
 using DiscordBot.Core;
+using DiscordBot.Data.Models;
 
 namespace DiscordBot.Services;
 
-public class SlashCommandsService(ApiService apiService)
+public class SlashCommandsService(ApiService apiService, SubscriptionService subscriptionService)
 {
     public static async Task InitializeCommandsAsync(DiscordSocketClient client)
     {
@@ -80,9 +81,20 @@ public class SlashCommandsService(ApiService apiService)
         // More commands here ...
     }
 
-    public async Task HandleSubscribeAsync(string ticker)
+    public async Task<bool> HandleSubscribeAsync(string ticker, ulong userId)
     {
-        await Task.CompletedTask;
+        if (!await subscriptionService.CheckValidTickerAsync(ticker))
+            return false;
+        var subcription = new StockNotificationSubscription
+        {
+            DiscordUID = userId,
+            NotificationType = 0,
+            Ticker = ticker.ToUpper(),
+            CreatedAt = DateTime.Now,
+            IsActive = false,
+        };
+        subscriptionService.subscriptionsInProgress.Add(userId, subcription);
+        return true;
     }
 
     public async Task HandleUnsubscribeAsync(string ticker)

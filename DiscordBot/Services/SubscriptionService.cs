@@ -1,11 +1,32 @@
 using Discord;
+using DiscordBot.Data;
 using DiscordBot.Data.Models;
 
 namespace DiscordBot.Services;
 
 public class SubscriptionService
 {
+    public Dictionary<ulong, StockNotificationSubscription> subscriptionsInProgress;
+    private readonly ApiService _apiService;
+    private readonly SubscriptionRepository _subscriptionRepository;
+
+    public SubscriptionService(ApiService apiService, SubscriptionRepository subscriptionRepository)
+    {
+        _apiService = apiService;
+        _subscriptionRepository = subscriptionRepository;
+        subscriptionsInProgress = new Dictionary<ulong, StockNotificationSubscription>();
+    }
+
     // Check to see if stock exists.
+    public async Task<bool> CheckValidTickerAsync(string ticker)
+    {
+        ticker = ticker.ToUpper();
+        var response = await _apiService.GetSingleStockPriceDailyDataAsync(ticker);
+        if (response.Data[0] is null)
+            return false;
+        return true;
+    }
+
     // Make a popup that asks the user what kind of notifications they want.
     public MessageComponent SpawnNotificationSelectMenu()
     {
@@ -30,6 +51,25 @@ public class SubscriptionService
         var builder = new ComponentBuilder().WithSelectMenu(notificationSelectionMenu);
 
         return builder.Build();
+    }
+
+    public async Task<bool> AddSubscriptionAsync(ulong userId)
+    {
+        if (subscriptionsInProgress[userId] is null)
+            return false;
+
+        // TODO: More validation etc to be done here.
+        if (
+            _subscriptionRepository.GetSingleSubscription(
+                userId,
+                subscriptionsInProgress[userId].Ticker
+            )
+            is not null
+        )
+            return false;
+        var sub = subscriptionsInProgress[userId];
+        subscriptionsInProgress.Remove(userId);
+        return await _subscriptionRepository.AddSubscriptionAsync(sub);
     }
 
     // If the user wants email, provide the user with a text box that they can enter their email.
