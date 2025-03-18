@@ -83,17 +83,25 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
 
     public async Task<OperationResponse> HandleSubscribeAsync(string ticker, ulong userId)
     {
+        ticker = ticker.ToUpper();
+        if (subscriptionService.IsUserAlreadySubscribed(userId, ticker))
+        {
+            return new OperationResponse(false, $"You are already subscribed to {ticker}.");
+        }
         if (!await subscriptionService.CheckValidTickerAsync(ticker))
+        {
             return new OperationResponse(
                 false,
                 "This ticker is not supported by our system. Please check the ticker and try again."
             );
+        }
         var subcription = new StockNotificationSubscription
         {
             DiscordUID = userId,
             NotificationType = 0,
-            Ticker = ticker.ToUpper(),
-            CreatedAt = DateTime.Now,
+            Ticker = ticker,
+            CreatedAt = DateTime.Now.ToUniversalTime(),
+            LastNotification = DateTime.Now.ToUniversalTime(),
             IsActive = false,
         };
         subscriptionService.subscriptionsInProgress.Add(userId, subcription);

@@ -89,4 +89,24 @@ public class ApiService
         var jsonDoc = JsonDocument.Parse(responseStr);
         return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
     }
+
+    public async Task<ApiResponse> CheckIsTickerValidAsync(string ticker)
+    {
+        var url = $"https://www.finnhub.io/api/v1/search?token={apiKey2}&q={ticker}&exchange=US";
+        var response = await _httpClient.GetAsync(url);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            return new ApiResponse(
+                $"{response.StatusCode}: Something went wrong retrieving the data",
+                null
+            );
+        }
+        var responseStr = await response.Content.ReadAsStringAsync();
+        if (responseStr == "[]")
+        {
+            return new ApiResponse($"Ticker Symbol invalid, check input and try again", null);
+        }
+        var jsonDoc = JsonDocument.Parse(responseStr);
+        return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
+    }
 }

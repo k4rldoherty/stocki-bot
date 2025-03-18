@@ -22,7 +22,7 @@ public class SubscriptionService
     public async Task<bool> CheckValidTickerAsync(string ticker)
     {
         ticker = ticker.ToUpper();
-        var response = await _apiService.GetSingleStockPriceDailyDataAsync(ticker);
+        var response = await _apiService.CheckIsTickerValidAsync(ticker);
         if (response?.Data is null)
             return false;
         return true;
@@ -54,25 +54,17 @@ public class SubscriptionService
         return builder.Build();
     }
 
+    public bool IsUserAlreadySubscribed(ulong userId, string ticker)
+    {
+        return _subscriptionRepository.GetSingleSubscription(userId, ticker) is not null;
+    }
+
     public async Task<OperationResponse> AddSubscriptionAsync(ulong userId)
     {
         if (!subscriptionsInProgress.TryGetValue(userId, out var _))
             return new OperationResponse(
                 false,
                 "Cannot find subscription data. Please restart your subscription"
-            );
-
-        // TODO: More validation etc to be done here.
-        if (
-            _subscriptionRepository.GetSingleSubscription(
-                userId,
-                subscriptionsInProgress[userId].Ticker
-            )
-            is not null
-        )
-            return new OperationResponse(
-                false,
-                $"You have already subscribed to notifications for {subscriptionsInProgress[userId].Ticker}."
             );
         var sub = subscriptionsInProgress[userId];
         subscriptionsInProgress.Remove(userId);

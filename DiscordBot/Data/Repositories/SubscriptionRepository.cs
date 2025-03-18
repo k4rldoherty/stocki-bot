@@ -6,7 +6,6 @@ public class SubscriptionRepository(StockiContext stockiContext)
 {
     public async Task<bool> AddSubscriptionAsync(StockNotificationSubscription subscription)
     {
-        subscription.CreatedAt = subscription.CreatedAt.ToUniversalTime();
         await stockiContext.StockNotificationSubscriptions.AddAsync(subscription);
         var result = await stockiContext.SaveChangesAsync();
         if (result > 0)
@@ -18,7 +17,7 @@ public class SubscriptionRepository(StockiContext stockiContext)
     {
         var res = stockiContext
             .StockNotificationSubscriptions.Where(sns =>
-                sns.DiscordUID == id && sns.Ticker == ticker
+                sns.DiscordUID == id && sns.Ticker == ticker && sns.IsActive
             )
             .FirstOrDefault();
 
