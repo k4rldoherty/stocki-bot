@@ -84,6 +84,13 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
     public async Task<OperationResponse> HandleSubscribeAsync(string ticker, ulong userId)
     {
         ticker = ticker.ToUpper();
+        if (subscriptionService.subscriptionsInProgress.TryGetValue(userId, out var _))
+        {
+            return new OperationResponse(
+                false,
+                $"You already have a subscription in progress. Please answer the form already open."
+            );
+        }
         if (subscriptionService.IsUserAlreadySubscribed(userId, ticker))
         {
             return new OperationResponse(false, $"You are already subscribed to {ticker}.");
