@@ -22,6 +22,7 @@ public class ApiService
             ?? throw new NullReferenceException("FINNHUB API KEY NOT FOUND");
     }
 
+    // TODO: Replace this with Finnhub API
     public async Task<ApiResponse> GetSingleStockPriceDailyDataAsync(string ticker)
     {
         var url =
@@ -46,6 +47,23 @@ public class ApiService
         return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
     }
 
+    public async Task<ApiResponse> GetStockPriceDataAsync(string ticker)
+    {
+        var url = $"https://www.finnhub.io/api/v1/quote?token={apiKey2}&symbol={ticker}";
+        var response = await _httpClient.GetAsync(url);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            return new ApiResponse(
+                $"{response.StatusCode}: Something went wrong retrieving price data.",
+                null
+            );
+        }
+        var responseStr = await response.Content.ReadAsStringAsync();
+        var jsonDoc = JsonDocument.Parse(responseStr);
+        return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
+    }
+
+    // TODO: Replace this with Finnhub API
     public async Task<ApiResponse> GetStockInfoAsync(string ticker)
     {
         var url =

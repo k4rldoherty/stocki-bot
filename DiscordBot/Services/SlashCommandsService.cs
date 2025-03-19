@@ -123,7 +123,7 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
     public async Task<string> HandleGetPriceOnlyAsync(string ticker)
     {
         ticker = ticker.ToUpper();
-        var response = await apiService.GetSingleStockPriceDailyDataAsync(ticker);
+        var response = await apiService.GetStockPriceDataAsync(ticker);
         if (response.Data is null)
             return BotResponsesService.ErrorResponse(response.Message);
         var data = response.Data[0];
@@ -136,30 +136,64 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
         return priceCurrent.ToString();
     }
 
+    // TODO: Clean this up, it was late at night i wanted to go to bed lol
     public async Task<string> HandleGetPriceAsync(string ticker)
     {
         ticker = ticker.ToUpper();
-        var response = await apiService.GetSingleStockPriceDailyDataAsync(ticker);
+        var response = await apiService.GetStockPriceDataAsync(ticker);
         if (response.Data is null)
             return BotResponsesService.ErrorResponse(response.Message);
-        var data = response.Data[0];
-        var dailyTimeSeries = data.RootElement.GetProperty("Time Series (Daily)").EnumerateObject();
-        dailyTimeSeries.MoveNext();
-        if (
-            !decimal.TryParse(
-                dailyTimeSeries.Current.Value.GetProperty("4. close").GetString(),
-                out var priceCurrent
-            )
-        )
-            return response.Message;
-        if (!dailyTimeSeries.MoveNext())
-            BotResponsesService.ErrorResponse(response.Message);
-        return !decimal.TryParse(
-            dailyTimeSeries.Current.Value.GetProperty("4. close").GetString(),
-            out var priceNext
-        )
-            ? BotResponsesService.ErrorResponse(response.Message)
-            : BotResponsesService.FormatSingleStockDaily(ticker, priceCurrent, priceNext);
+        var data = response.Data[0].RootElement;
+        if (!data.TryGetProperty("c", out var current))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse current price"
+            );
+        }
+        if (!data.TryGetProperty("d", out var change))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse change"
+            );
+        }
+        if (change.ValueKind == System.Text.Json.JsonValueKind.Null)
+        {
+            return BotResponsesService.ErrorResponse("[HandleGetPriceAsync]: Ticker not found");
+        }
+        if (!data.TryGetProperty("dp", out var percentageChange))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse % change"
+            );
+        }
+        if (!data.TryGetProperty("o", out var open))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse opening price"
+            );
+        }
+        if (!data.TryGetProperty("h", out var high))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse high price"
+            );
+        }
+        if (!data.TryGetProperty("l", out var low))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceAsync]: Unable to parse low price"
+            );
+        }
+
+        return BotResponsesService.FormatSingleStockDaily(
+            ticker,
+            Convert.ToDecimal(current.ToString()),
+            Convert.ToDecimal(change.ToString()),
+            Convert.ToDecimal(percentageChange.ToString()),
+            Convert.ToDecimal(open.ToString()),
+            Convert.ToDecimal(high.ToString()),
+            Convert.ToDecimal(low.ToString())
+        );
     }
 
     public async Task<string> HandleGetInfoAsync(string ticker)
