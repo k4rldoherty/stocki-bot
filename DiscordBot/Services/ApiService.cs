@@ -22,31 +22,6 @@ public class ApiService
             ?? throw new NullReferenceException("FINNHUB API KEY NOT FOUND");
     }
 
-    // TODO: Replace this with Finnhub API
-    public async Task<ApiResponse> GetSingleStockPriceDailyDataAsync(string ticker)
-    {
-        var url =
-            $"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey={apiKey1}";
-        var response = await _httpClient.GetAsync(url);
-        if (response.StatusCode != HttpStatusCode.OK)
-            return new ApiResponse(
-                $"{response.StatusCode}: Something went wrong when retrieving the data",
-                null
-            );
-        var responseStr = await response.Content.ReadAsStringAsync();
-        var jsonDoc = JsonDocument.Parse(responseStr);
-        if (jsonDoc.RootElement.TryGetProperty("Information", out _))
-            return new ApiResponse(
-                "My owner is too cheap to pay for the premium API.. I'm going to sleep until tomorrow.",
-                null
-            );
-        if (!jsonDoc.RootElement.TryGetProperty("Meta Data", out _))
-        {
-            return new ApiResponse("API-E1", null);
-        }
-        return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
-    }
-
     public async Task<ApiResponse> GetStockPriceDataAsync(string ticker)
     {
         var url = $"https://www.finnhub.io/api/v1/quote?token={apiKey2}&symbol={ticker}";
@@ -63,7 +38,6 @@ public class ApiService
         return new ApiResponse($"{response.StatusCode}", [jsonDoc]);
     }
 
-    // TODO: Replace this with Finnhub API
     public async Task<ApiResponse> GetStockInfoAsync(string ticker)
     {
         var url =

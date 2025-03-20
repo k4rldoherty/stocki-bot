@@ -126,14 +126,18 @@ public class SlashCommandsService(ApiService apiService, SubscriptionService sub
         var response = await apiService.GetStockPriceDataAsync(ticker);
         if (response.Data is null)
             return BotResponsesService.ErrorResponse(response.Message);
-        var data = response.Data[0];
-        var dailyTimeSeries = data
-            .RootElement.GetProperty("Time Series (Daily)")
-            .EnumerateObject()
-            .First();
-        if (!dailyTimeSeries.Value.TryGetProperty("4. close", out var priceCurrent))
-            return response.Message;
-        return priceCurrent.ToString();
+        var data = response.Data[0].RootElement;
+        if (!data.TryGetProperty("c", out var currPrice))
+        {
+            return BotResponsesService.ErrorResponse(
+                "[HandleGetPriceOnlyAsync]: Unable to parse current price"
+            );
+        }
+        if (Decimal.Parse(currPrice.ToString()).Equals(0.00))
+        {
+            return BotResponsesService.ErrorResponse("Ticker Not Found");
+        }
+        return currPrice.ToString();
     }
 
     // TODO: Clean this up, it was late at night i wanted to go to bed lol
