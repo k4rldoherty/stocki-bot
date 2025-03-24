@@ -1,5 +1,5 @@
 using Discord.WebSocket;
-using DiscordBot.Core;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
@@ -7,18 +7,22 @@ public class SlashCommandHandler
 {
     private readonly SlashCommandsService _slashCommands;
     private readonly SubscriptionService _subscriptionService;
+    private readonly ILogger<SlashCommandHandler> _logger;
 
     public SlashCommandHandler(
         SlashCommandsService slashCommands,
-        SubscriptionService subscriptionService
+        SubscriptionService subscriptionService,
+        ILogger<SlashCommandHandler> logger
     )
     {
         _slashCommands = slashCommands;
         _subscriptionService = subscriptionService;
+        _logger = logger;
     }
 
     public async Task HandleCommandAsync(SocketSlashCommand command)
     {
+        _logger.LogInformation($"User {command.User.Username} executed /{command.CommandName}");
         switch (command.CommandName)
         {
             case "stock-price":
@@ -30,6 +34,7 @@ public class SlashCommandHandler
                     var response = await _slashCommands.HandleGetPriceAsync(stockPriceArg);
                     await command.RespondAsync(response);
                 }
+                _logger.LogInformation($"{command.CommandName} executed @ {DateTime.Now}\n");
                 break;
 
             case "info":
@@ -41,6 +46,7 @@ public class SlashCommandHandler
                     var response = await _slashCommands.HandleGetInfoAsync(infoArg);
                     await command.RespondAsync(response);
                 }
+                _logger.LogInformation($"{command.CommandName} executed @ {DateTime.Now}\n");
                 break;
 
             case "latest-news":
@@ -52,6 +58,7 @@ public class SlashCommandHandler
                     var response = await _slashCommands.HandleGetCompanyNewsAsync(companyNewsArg);
                     await command.RespondAsync(response);
                 }
+                _logger.LogInformation($"{command.CommandName} executed @ {DateTime.Now}\n");
                 break;
 
             case "subscribe":

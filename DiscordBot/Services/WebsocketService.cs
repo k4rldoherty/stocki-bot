@@ -1,7 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
+using DiscordBot.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,13 +11,18 @@ namespace DiscordBot;
 public class WebsocketService : BackgroundService
 {
     private ILogger<WebsocketService> _logger;
+    private SubscriptionRepository _subscriptionRepository;
     private ClientWebSocket _websocket;
     private Uri _uri;
-    private List<String> _subscribedTickers = new() { "AAPL", "NVDA" };
+    private List<String> _subscribedTickers;
     private readonly string _apiKey;
     private readonly TimeSpan _maxBackoff = TimeSpan.FromSeconds(30);
 
-    public WebsocketService(ILogger<WebsocketService> logger, IConfiguration config)
+    public WebsocketService(
+        ILogger<WebsocketService> logger,
+        IConfiguration config,
+        SubscriptionRepository subscriptionRepository
+    )
     {
         _logger = logger;
         _apiKey =
@@ -25,17 +30,13 @@ public class WebsocketService : BackgroundService
             ?? throw new NullReferenceException("FINNHUB API KEY NOT FOUND");
         _uri = new($"wss://ws.finnhub.io?token={_apiKey}");
         _websocket = new ClientWebSocket();
-    }
-
-    // TODO: Grab the subdcribed tickers from the DB for connecting to websockets.
-    private async Task GetSubscribedTickers()
-    {
-        await Task.CompletedTask;
+        _subscriptionRepository = subscriptionRepository;
+        _subscribedTickers = GetSubscribedTickers();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting websockets connection...");
+        _logger.LogInformation("Starting websockets connection...\n");
         while (!stoppingToken.IsCancellationRequested)
         {
             await ConnectAndListenAsync(stoppingToken);
@@ -49,19 +50,18 @@ public class WebsocketService : BackgroundService
         {
             try
             {
-                _logger.LogInformation("Connecting to socket");
+                _logger.LogInformation("Connecting to socket\n");
                 _websocket = new();
                 await _websocket.ConnectAsync(_uri, stoppingToken);
                 _logger.LogInformation("Connected, subscribing to tickers");
                 await SubscribeTickersAsync();
-                _logger.LogInformation("Tickers subscribed");
+                _logger.LogInformation("Tickers subscribed\n");
                 await ListenForMessagesAsync(stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
             }
-
             if (stoppingToken.IsCancellationRequested)
             {
                 return;
@@ -108,7 +108,7 @@ public class WebsocketService : BackgroundService
                 break;
             }
             var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            _logger.LogInformation($"Recieved: {message}");
+            _logger.LogInformation($"Recieved: {message}\n");
         }
     }
 
@@ -125,5 +125,17 @@ public class WebsocketService : BackgroundService
         }
         _websocket.Dispose();
         await base.StopAsync(stoppingToken);
+    }
+
+    // TODO: Grab the subscribed tickers from the DB for connecting to websockets.
+    private List<string> GetSubscribedTickers()
+    {
+        var subscriptions = _subscriptionRepository.GetAllSubscriptions();
+        if (subscriptions is not null)
+        {
+            var sList = subscriptions.Select(s => s.Ticker).ToList();
+            return sList;
+        }
+        return new List<string>();
     }
 }

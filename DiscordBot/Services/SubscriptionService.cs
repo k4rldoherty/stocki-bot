@@ -2,6 +2,7 @@ using Discord;
 using DiscordBot.Core;
 using DiscordBot.Data;
 using DiscordBot.Data.Models;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Services;
 
@@ -9,11 +10,17 @@ public class SubscriptionService
 {
     public Dictionary<ulong, StockNotificationSubscription> subscriptionsInProgress;
     private readonly ApiService _apiService;
+    private ILogger<SubscriptionService> _logger;
     private readonly SubscriptionRepository _subscriptionRepository;
 
-    public SubscriptionService(ApiService apiService, SubscriptionRepository subscriptionRepository)
+    public SubscriptionService(
+        ApiService apiService,
+        SubscriptionRepository subscriptionRepository,
+        ILogger<SubscriptionService> logger
+    )
     {
         _apiService = apiService;
+        _logger = logger;
         _subscriptionRepository = subscriptionRepository;
         subscriptionsInProgress = new Dictionary<ulong, StockNotificationSubscription>();
     }
@@ -24,7 +31,10 @@ public class SubscriptionService
         ticker = ticker.ToUpper();
         var response = await _apiService.CheckIsTickerValidAsync(ticker);
         if (response?.Data is null)
+        {
+            _logger.LogWarning($"{ticker} is not a valid ticker.");
             return false;
+        }
         return true;
     }
 
