@@ -1,10 +1,11 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace DiscordBot.Services;
 
-public class BotService
+public class BotService : BackgroundService
 {
     private readonly DiscordSocketClient _client;
     private readonly SlashCommandHandler _slashCommandHandler;
@@ -27,7 +28,7 @@ public class BotService
         _loggingService = loggingService;
     }
 
-    public async Task StartAsync()
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var token = _config["DISCORD_TOKEN"];
 
@@ -46,5 +47,20 @@ public class BotService
 
         // Handle slash commands
         _client.SlashCommandExecuted += _slashCommandHandler.HandleCommandAsync;
+
+        try
+        {
+            await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
+        catch (TaskCanceledException ex)
+        {
+            // TODO: Log something here
+        }
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        await _client.StopAsync();
+        await base.StopAsync(stoppingToken);
     }
 }

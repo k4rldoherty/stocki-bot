@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot;
 
@@ -29,17 +30,20 @@ public class Program
                     services.AddSingleton<DiscordSocketClient>();
                     services.AddSingleton<CommandService>();
 
-                    // My services
+                    // Services
                     services.AddSingleton<SlashCommandsService>();
                     services.AddSingleton<LoggingService>();
                     services.AddSingleton<BotResponsesService>();
                     services.AddSingleton<InputHandlerService>();
-                    services.AddSingleton<BotService>();
                     services.AddSingleton<SlashCommandHandler>();
                     services.AddTransient<ApiService>();
                     services.AddSingleton<SubscriptionService>();
 
-                    // My Repositories
+                    // Hosted services - These are started automatically on starting the application
+                    services.AddHostedService<WebsocketService>();
+                    services.AddHostedService<BotService>();
+
+                    // Repositories
                     services.AddSingleton<SubscriptionRepository>();
 
                     var connString = config["POSTGRES-CONNECTION-STRING"];
@@ -51,11 +55,12 @@ public class Program
                     });
                 }
             )
+            .ConfigureLogging(logging =>
+            {
+                logging.AddConsole();
+            })
             .Build();
 
-        var botService = host.Services.GetRequiredService<BotService>();
-
-        await botService.StartAsync();
-        await Task.Delay(-1); // Keeps bot running
+        await host.RunAsync();
     }
 }
