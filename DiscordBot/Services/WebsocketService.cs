@@ -77,14 +77,17 @@ public class WebsocketService : BackgroundService
     {
         foreach (var ticker in _subscribedTickers)
         {
-            var message = JsonSerializer.Serialize(new { type = "subscribe", ticker = ticker });
+            var message = JsonSerializer.Serialize(
+                new { type = "subscribe", symbol = ticker.ToUpper() }
+            );
+            _logger.LogInformation($"Sending subscribe request: {message}");
             await _websocket.SendAsync(
                 Encoding.UTF8.GetBytes(message),
                 WebSocketMessageType.Text,
                 true,
                 CancellationToken.None
             );
-            _logger.LogInformation($"Subscribed to ticker {ticker}");
+            _logger.LogInformation($"Websocket connection established with ticker {ticker}");
         }
     }
 
