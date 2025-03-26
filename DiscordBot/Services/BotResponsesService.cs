@@ -49,16 +49,16 @@ public class BotResponsesService
     public static string FormatStockSummary(StockSummary stockSummary)
     {
         return $"""
-            # {stockSummary.Name}
+            # {stockSummary.name}
             ## Basic Info
-            - Sector: **{stockSummary.Sector}**
-            - Symbol: **{stockSummary.Symbol}**
+            - Sector: **{stockSummary.sector}**
+            - Symbol: **{stockSummary.symbol}**
             ## Description
-            {stockSummary.Description}
+            {stockSummary.description}
             ## Financials
-            ### Current Price: ${stockSummary.Price:#.##}
-            - Earnings Per Share: **{stockSummary.Eps}**
-            - Analyst Price Target (12 Month Horizon): **${stockSummary.AnalystPriceTarget}**
+            ### Current Price: ${stockSummary.price:#.##}
+            - Earnings Per Share: **{stockSummary.eps}**
+            - Analyst Price Target (12 Month Horizon): **${stockSummary.priceTarget}**
 
             *This feature will be continuously updated with more metrics, I'm just trying to get a working version out ASAP*
             """;

@@ -38,6 +38,7 @@ public class Program
                     services.AddSingleton<SlashCommandHandler>();
                     services.AddTransient<ApiService>();
                     services.AddSingleton<SubscriptionService>();
+                    services.AddSingleton<PriceActionService>();
 
                     // Hosted services - These are started automatically on starting the application
                     services.AddHostedService<WebsocketService>();

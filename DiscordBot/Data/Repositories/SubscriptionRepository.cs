@@ -14,7 +14,7 @@ public class SubscriptionRepository(
         var result = await stockiContext.SaveChangesAsync();
         if (result > 0)
         {
-            logger.LogInformation("Subscription added successfully.");
+            logger.LogInformation($"Subscription added successfully.{DateTime.Now}");
             return true;
         }
         return false;
@@ -31,7 +31,6 @@ public class SubscriptionRepository(
         return res;
     }
 
-    // TODO: Change this as could slow if lot of subscripions
     public List<StockNotificationSubscription>? GetAllSubscriptions()
     {
         var res = stockiContext.StockNotificationSubscriptions.Where(sns => sns.IsActive).ToList();
